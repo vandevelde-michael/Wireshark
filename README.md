@@ -6,7 +6,7 @@
 ### Qu'est-ce que Wireshark ?
 Wireshark est un analyseur de paquets réseau open-source. Il permet de capturer, analyser et interpréter le trafic réseau sur une interface donnée. Il fonctionne en mode graphique, et son pendant en ligne de commande est `tshark`.
 
-# Trame vs Paquet
+### Trame vs Paquet
 - **Trame** : unité de donnée de la couche liaison (niveau 2 OSI), contenant les adresses MAC.
 - **Paquet** : unité de donnée de la couche réseau (niveau 3 OSI), contenant les adresses IP.
 

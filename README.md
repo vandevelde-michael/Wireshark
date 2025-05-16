@@ -1,132 +1,219 @@
+# 🦈 Projet Wireshark - Analyse réseau sur VMs Linux
 
-# Documentation Projet Wireshark
+## 🎯 Objectif du projet
 
-## Partie 1 – Découverte de Wireshark
-
-### Qu'est-ce que Wireshark ?
-Wireshark est un analyseur de paquets réseau open-source. Il permet de capturer, analyser et interpréter le trafic réseau sur une interface donnée. Il fonctionne en mode graphique, et son pendant en ligne de commande est `tshark`.
-
-### Trame vs Paquet
-- **Trame** : unité de donnée de la couche liaison (niveau 2 OSI), contenant les adresses MAC.
-- **Paquet** : unité de donnée de la couche réseau (niveau 3 OSI), contenant les adresses IP.
-
-### Format pcap/pcapng
-- **pcap** : format standard de capture de paquets.
-- **pcapng** : format plus récent et plus complet, supporte des métadonnées supplémentaires.
-
-## Installation de Wireshark
-```bash
-sudo apt update
-sudo apt install wireshark
-sudo wireshark
-```
-*Lancer en root permet d'accéder aux interfaces réseau.*
-
-### Captures de paquets
-Interface utilisée : ens33 (interface NAT dans les VM)
-
-Filtres d'affichage :
-- ARP : `arp`
-- UDP : `udp`
-- TCP : `tcp`
-
-### Analyse de trames
-Pour chaque capture, identifier les éléments suivants :
-- Adresse MAC source/destination
-- Adresse IP source/destination
-- Ports (UDP/TCP)
-
-### Découverte d'autres paquets
-Lors des captures, on observe aussi :
-- DNS : `dns`
-- mDNS : `mdns`
-- ICMP : `icmp`
-- HTTP/HTTPS : `http`, `tls`
-
-### Spécifications des paquets
-  ARP
-- Aucune couche transport
-- Utilise le broadcast
-- Permet d'associer une adresse IP à une adresse MAC
-
-  UDP
-- Protocole non connecté
-- Léger, sans contrôle d'erreur
-
-  TCP
-- Protocole connecté
-- Utilise la connexion en 3 étapes : SYN, SYN-ACK, ACK
-
-### Diagramme TCP
-```
-Client   ------------------->  Serveur : SYN
-Client   <-------------------  Serveur : SYN-ACK
-Client   ------------------->  Serveur : ACK
-```
-
- ### Utilisation des filtres Wireshark
-Filtres d'affichage utiles :
-- Par protocole : `arp`, `tcp`, `udp`, `dns`, `tls`
-- Par IP : `ip.addr == 192.168.1.10`
-- Par port : `tcp.port == 80`
-
-## Partie 2 – Capture sur réseau local
-
-Configuration : VM client et VM serveur en NAT.
-
-  Protocoles à tester
-| Protocole | Action/Test | Filtre Wireshark |
-|----------|-------------|------------------|
-| ARP | `ping` local | `arp` |
-| DHCP | Démarrage VM sans IP | `bootp` |
-| DNS | `dig` ou `nslookup` | `dns` |
-| mDNS | `avahi-daemon` actif | `mdns` |
-| FTP | Serveur vsftpd | `ftp` |
-| SMB | Partage Windows | `smb` |
-| SSL | Navigation HTTPS | `ssl` |
-| HTTPS | `curl https://...` | `tls` |
-| TLSv1.2 | Accès site sécurisé | `tls` |
-
- ### Sauvegarde des paquets
-- Utiliser "Fichier > Enregistrer sous" au format `.pcapng`
-- Donner un nom correspondant : `capture_ftp.pcapng`, etc.
-
- ### Interprétation FTP vs SSL
-- En FTP sans TLS : les mots de passe sont visibles en clair dans Wireshark.
-- En HTTPS/SSL : les données sont chiffrées, les mots de passe sont illisibles.
-
-## Partie 3 – tshark
-
- ### Installation
-```bash
-sudo apt install tshark
-```
-
-### Commandes utiles
-- Capture UDP :
-```bash
-sudo tshark -i ens33 -f "udp" -w udp_capture.pcap
-```
-- Afficher noms DNS :
-```bash
-sudo tshark -i ens33 -Y dns -T fields -e dns.qry.name
-```
-- Capture filtrée FTP :
-```bash
-sudo tshark -i ens33 -Y ftp -w ftp_capture.pcap
-```
-
-###  Options utiles
-| Option | Description |
-|--------|-------------|
-| `-i` | Interface |
-| `-f` | Filtre de capture (niveau bas) |
-| `-Y` | Filtre d'affichage (niveau haut) |
-| `-w` | Sauvegarde dans un fichier .pcap |
-| `-T` | Type de sortie (text, fields...) |
-| `-e` | Champ à afficher |
+Découvrir l’analyse réseau avec **Wireshark** et **tshark** sous **Linux**, en capturant, filtrant, et analysant différents types de paquets réseau (ARP, TCP, UDP, DNS, etc.). Ce projet permet aussi de mieux comprendre les **couches du modèle OSI** et le fonctionnement des **protocoles réseau**.
 
 ---
 
-## Conclusion
-Ce projet a permis de mettre en pratique les compétences d'analyse réseau avec Wireshark et tshark. En comparant les protocoles, leurs fonctionnements, et les données transportées, on comprend l'importance de la capture réseau pour la sécurité et le diagnostic.
+## 🧰 Présentation de Wireshark
+
+**Wireshark** est un outil graphique de capture réseau qui permet :
+- de surveiller les paquets en temps réel,
+- de les filtrer selon différents critères,
+- de décoder leur contenu selon les couches du modèle OSI (Ethernet, IP, TCP...).
+
+### 🧪 tshark (version en ligne de commande)
+
+**tshark** est la version terminal de Wireshark. Il permet :
+- de capturer des paquets directement en ligne de commande,
+- d’automatiser les analyses réseau via des scripts.
+
+---
+
+## ❓ Réponses aux questions du sujet
+
+### 📌 Quelle est la différence entre une trame et un paquet ?
+- **Trame** = niveau **liaison (couche 2)** → elle contient les **adresses MAC**, utilisée dans les réseaux Ethernet.
+- **Paquet** = niveau **réseau (couche 3)** → il contient les **adresses IP**, utile pour le routage.
+
+### 📌 Qu’est-ce que le format pcap / pcapng ?
+- Ce sont des **formats de fichiers de capture** utilisés par Wireshark et tshark.
+- `.pcap` est l’ancien format, `.pcapng` est plus récent (supporte plus d'infos : noms d'interfaces, commentaires, etc.).
+
+---
+
+## 🖥️ Environnement utilisé
+
+- 2 VMs sous **Debian** : une en **serveur** (avec services installés), une en **client**.
+- Réseau configuré en **NAT** ou **Bridge** pour la capture réseau.
+
+---
+
+## ⚙️ Étapes de capture Wireshark
+
+### 1. 🧱 Installation
+
+```bash
+sudo apt update
+sudo apt install wireshark tshark -y
+````
+
+Autoriser l'utilisateur courant :
+
+```bash
+sudo usermod -aG wireshark $USER
+```
+
+Puis redémarrer la session ou faire :
+
+```bash
+newgrp wireshark
+```
+
+### 2. 📡 Lancer Wireshark (ou tshark)
+
+```bash
+sudo wireshark &
+```
+
+OU pour la ligne de commande :
+
+```bash
+sudo tshark
+```
+
+---
+
+## 🧪 Captures demandées
+
+### 🔎 Captures à faire avec Wireshark
+
+Filtrer les paquets :
+
+* ARP → `arp`
+* TCP → `tcp`
+* UDP → `udp`
+
+Exemple d’analyse de trame TCP :
+
+* **MAC source** : `08:00:27:ab:cd:ef`
+* **IP source** : `192.168.1.10`
+* **MAC destination** : `08:00:27:12:34:56`
+* **IP destination** : `192.168.1.1`
+
+---
+
+## 🧬 Analyse OSI
+
+Avec un paquet TCP :
+
+1. **Couche 1** : Physique (non visible)
+2. **Couche 2** : Liaison (Ethernet → adresses MAC)
+3. **Couche 3** : Réseau (IP → adresses IP)
+4. **Couche 4** : Transport (TCP ou UDP)
+5. **Couche 7** : Application (HTTP, DNS, FTP...)
+
+---
+
+## 🔓 Exemples de protocoles à capturer
+
+### ➤ ARP
+
+Filtre : `arp`
+Fonction : Résolution d’adresse IP en adresse MAC sur le LAN.
+
+### ➤ TCP / UDP
+
+Filtre : `tcp` ou `udp`
+Fonction : Transport de données fiable (TCP) ou rapide mais sans vérification (UDP).
+
+### ➤ DNS / mDNS
+
+Filtre : `dns` ou `mdns`
+Fonction DNS : Résolution de noms de domaines ([www.google.fr](http://www.google.fr) → IP)
+Fonction mDNS : DNS local sans serveur (utilisé par exemple avec `.local`)
+
+### ➤ DHCP
+
+Filtre : `bootp`
+Fonction : Attribution automatique d’IP par le serveur.
+
+### ➤ FTP (non sécurisé)
+
+Filtre : `ftp`
+📌 Observation : les **identifiants de connexion (login/mot de passe)** peuvent être vus en clair dans les paquets → dangereux.
+
+### ➤ TLS / HTTPS / SSL
+
+Filtres :
+
+* TLS : `tls`
+* HTTPS : `http && tls`
+* SSL : `ssl`
+
+📌 Observation : les données sont **chiffrées**, on ne peut pas lire les identifiants → sécurisé.
+
+---
+
+## 📥 tshark – Capture par script
+
+### ➤ Capture simple
+
+```bash
+sudo tshark -i eth0 -a duration:30 -w capture.pcapng
+```
+
+* `-i eth0` : interface réseau
+* `-a duration:30` : capture pendant 30 secondes
+* `-w` : écrit dans un fichier
+
+### ➤ Capture filtrée (ex. : DNS uniquement)
+
+```bash
+sudo tshark -i eth0 -Y dns -w dns_only.pcapng
+```
+
+### ➤ Export texte lisible
+
+```bash
+tshark -r capture.pcapng -V > details.txt
+```
+
+---
+
+## 🔁 Analyse hexadécimale
+
+Outils en ligne pour analyser les paquets en hexadécimal :
+
+* [https://hpd.gasmi.net/](https://hpd.gasmi.net/)
+* [https://www.binaryhexconverter.com/](https://www.binaryhexconverter.com/)
+* [https://www.base64decode.org/](https://www.base64decode.org/)
+* [https://www.dcode.fr/md5-hash](https://www.dcode.fr/md5-hash)
+
+---
+
+## 🔄 Schéma de connexion TCP (3-way handshake)
+
+```
+Client ------ SYN ------> Serveur
+Client <----- SYN-ACK --- Serveur
+Client ------ ACK ------> Serveur
+```
+
+Ce mécanisme permet de **synchroniser** les deux machines avant d’échanger des données.
+
+---
+
+## 🔍 Utilisation des filtres Wireshark
+
+Filtres d'affichage :
+
+* `ip.addr == 192.168.1.10`
+* `tcp.port == 80`
+* `udp contains "DHCP"`
+* `http.request.method == "GET"`
+
+Ces filtres permettent de **trouver plus vite les trames utiles** dans la masse capturée.
+
+---
+
+## ✅ Conclusion
+
+Ce projet m’a permis de :
+
+* comprendre la **différence entre trame, paquet, segment**,
+* observer le **fonctionnement des protocoles TCP/IP**,
+* capturer et filtrer du trafic avec **Wireshark** et **tshark**,
+* repérer des **données sensibles** transmises sans chiffrement (FTP),
+* mettre en place une **analyse réseau automatisée sous Linux**
